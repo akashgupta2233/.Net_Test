@@ -1,4 +1,6 @@
-﻿    class Program
+﻿using QuickMartTraders;
+
+    class Program
     {
         static void Main()
         {
