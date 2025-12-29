@@ -1,7 +1,14 @@
+using System;
+
 namespace MediSureClinicBilling
 {
+    /// <summary>
+    /// Represents the billing details for an individual patient.
+    /// Handles the storage and calculation of costs and discounts.
+    /// </summary>
     public class PatientBill
     {
+        // --- Properties ---
         public string BillId { get; set; }
         public string PatientName { get; set; }
         public bool HasInsurance { get; set; }
@@ -12,10 +19,16 @@ namespace MediSureClinicBilling
         public decimal DiscountAmount { get; set; }
         public decimal FinalPayable { get; set; }
 
-        // Member function to generate Bill
+        /// <summary>
+        /// Calculates the total gross amount, applicable insurance discounts, 
+        /// and the final amount the patient needs to pay.
+        /// </summary>
         public void ComputeBill()
         {
+            // Sum of all individual medical charges
             GrossAmount = ConsultationFee + LabCharges + MedicineCharges;
+
+            // Apply a 10% discount if the patient is insured
             if (HasInsurance)
             {
                 DiscountAmount = GrossAmount * 0.10m;
@@ -24,10 +37,14 @@ namespace MediSureClinicBilling
             {
                 DiscountAmount = 0;
             }
+
+            // Deduct discount from gross total to get final amount
             FinalPayable = GrossAmount - DiscountAmount;
         }
 
-        // Function to display bill
+        /// <summary>
+        /// Outputs a formatted receipt of the bill to the console.
+        /// </summary>
         public void Display()
         {
             Console.WriteLine("----------- Last Bill -----------");
@@ -44,30 +61,45 @@ namespace MediSureClinicBilling
         }
     }
 
+    /// <summary>
+    /// Static utility class to manage the lifecycle of patient bills.
+    /// Controls creating, viewing, and clearing the billing records.
+    /// </summary>
     public static class BillMananger
     {
+        // Stores the most recently processed bill in memory
         public static PatientBill LastBill;
+        
+        // Track whether a bill has been created to prevent errors when viewing
         public static bool HasLastBill = false;
 
+        /// <summary>
+        /// Prompts user for patient data, computes costs, and stores the record.
+        /// </summary>
         public static void createBill()
         {
             PatientBill bill = new PatientBill();
 
-            Console.WriteLine("Enter Bill Id: ");
+            Console.Write("Enter Bill Id: ");
             bill.BillId = Console.ReadLine();
 
             Console.Write("Enter Patient Name: ");
             bill.PatientName = Console.ReadLine();
 
+            // Handle insurance status as a boolean check
             Console.Write("Is the patient insured? (Y/N): ");
             string insuranceInput = Console.ReadLine();
             bill.HasInsurance = insuranceInput.Trim().ToUpper() == "Y";
 
+            // Use the helper method for robust decimal input validation
             bill.ConsultationFee = ReadDecimal("Enter Consultation Fee (>0): ", true);
             bill.LabCharges = ReadDecimal("Enter Lab Charges (>=0): ", false);
             bill.MedicineCharges = ReadDecimal("Enter Medicine Charges (>=0): ", false);
 
+            // Execute the business logic calculation
             bill.ComputeBill();
+            
+            // Save to static memory
             LastBill = bill;
             HasLastBill = true;
 
@@ -78,7 +110,9 @@ namespace MediSureClinicBilling
             Console.WriteLine("------------------------------------------------------------");
         }
 
-        // Function to view bill if available
+        /// <summary>
+        /// Checks for an existing bill and displays it; otherwise, notifies the user.
+        /// </summary>
         public static void ViewBill()
         {
             if (!HasLastBill)
@@ -91,7 +125,10 @@ namespace MediSureClinicBilling
                 Console.WriteLine("------------------------------------------------------------");
             }
         }
-        // Function to clear last bill
+
+        /// <summary>
+        /// Resets the billing storage.
+        /// </summary>
         public static void ClearBill()
         {
             LastBill = null;
@@ -99,6 +136,13 @@ namespace MediSureClinicBilling
             Console.WriteLine("Last bill cleared.");
         }
 
+        /// <summary>
+        /// Helper method to ensure user enters a valid decimal value.
+        /// Loops until input is valid to prevent program crashes.
+        /// </summary>
+        /// <param name="prompt">The text to show the user.</param>
+        /// <param name="mustBePositive">If true, value must be > 0. If false, value must be >= 0.</param>
+        /// <returns>A validated decimal value.</returns>
         private static decimal ReadDecimal(string prompt, bool mustBePositive)
         {
             decimal value;
@@ -106,13 +150,17 @@ namespace MediSureClinicBilling
             {
                 Console.Write(prompt);
                 string input = Console.ReadLine();
+
+                // Check if the input is actually a number
                 if (decimal.TryParse(input, out value))
                 {
+                    // Validation for positive requirements (e.g., fees shouldn't be zero)
                     if (mustBePositive && value <= 0)
                     {
                         Console.WriteLine("Value must be greater than 0.");
                         continue;
                     }
+                    // Validation for non-negative requirements (e.g., charges can't be negative)
                     if (!mustBePositive && value < 0)
                     {
                         Console.WriteLine("Value must be non-negative.");
